@@ -41,6 +41,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
+            .cors(cors -> {}) // Enables CORS
             .csrf(AbstractHttpConfigurer::disable)
 
             // Allow H2 console
@@ -68,7 +69,7 @@ public class SecurityConfig {
 
                 // ================= EMPLOYER =================
 
-                // Employer can see their own jobs
+                // Employer jobs
                 .requestMatchers(HttpMethod.GET, "/api/jobs/employer")
                         .hasRole("EMPLOYER")
 
@@ -88,7 +89,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/jobs/**")
                         .hasRole("EMPLOYER")
 
-                // View applicants for a job
+                // View applicants
                 .requestMatchers(HttpMethod.GET, "/api/applications/job/**")
                         .hasRole("EMPLOYER")
 
@@ -160,20 +161,5 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
 
         return new BCryptPasswordEncoder(12);
-    }
-    
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
-        http
-            .cors()
-            .and()
-            .csrf().disable()
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .anyRequest().authenticated()
-            );
-
-        return http.build();
     }
 }
