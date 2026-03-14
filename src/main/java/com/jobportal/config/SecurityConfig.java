@@ -41,14 +41,21 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .cors(cors -> {}) // Enables CORS
+
+            // Enable CORS
+            .cors(cors -> {})
+
+            // Disable CSRF
             .csrf(AbstractHttpConfigurer::disable)
 
-            // Allow H2 console
+            // Allow H2 console frames
             .headers(h -> h.frameOptions(
                     HeadersConfigurer.FrameOptionsConfig::sameOrigin))
 
             .authorizeHttpRequests(auth -> auth
+
+                // Allow CORS preflight requests
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // ================= PUBLIC =================
 
@@ -69,23 +76,18 @@ public class SecurityConfig {
 
                 // ================= EMPLOYER =================
 
-                // Employer jobs
                 .requestMatchers(HttpMethod.GET, "/api/jobs/employer")
                         .hasRole("EMPLOYER")
 
-                // Create job
                 .requestMatchers(HttpMethod.POST, "/api/jobs")
                         .hasRole("EMPLOYER")
 
-                // Update job
                 .requestMatchers(HttpMethod.PUT, "/api/jobs/**")
                         .hasRole("EMPLOYER")
 
-                // Update job status
                 .requestMatchers(HttpMethod.PATCH, "/api/jobs/**")
                         .hasRole("EMPLOYER")
 
-                // Delete job
                 .requestMatchers(HttpMethod.DELETE, "/api/jobs/**")
                         .hasRole("EMPLOYER")
 
@@ -99,11 +101,9 @@ public class SecurityConfig {
 
                 // ================= JOB SEEKER =================
 
-                // Apply for job
                 .requestMatchers(HttpMethod.POST, "/api/applications/**")
                         .hasRole("JOB_SEEKER")
 
-                // View own applications
                 .requestMatchers("/api/applications/my")
                         .hasRole("JOB_SEEKER")
 
@@ -112,11 +112,14 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
+            // Stateless JWT authentication
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
+            // Authentication provider
             .authenticationProvider(authenticationProvider())
 
+            // JWT filter
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
